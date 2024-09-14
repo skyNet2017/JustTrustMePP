@@ -151,17 +151,38 @@ public class Main implements IXposedHookLoadPackage {
                 methodHookParam.args[2] = null;
             }
         }});
+        Log.i(TAG,"android.app.Application--->try attach");
         XposedHelpers.findAndHookMethod("android.app.Application", loadPackageParam.classLoader, "attach", new Object[]{Context.class, new XC_MethodHook() {
             /* class just.trust.me.Main.11 */
 
             /* access modifiers changed from: protected */
             public void afterHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+                Log.i(TAG,"android.app.Application--->attached");
                 Context context = (Context) methodHookParam.args[0];
                 Main.this.processOkHttp(context.getClassLoader());
                 Main.this.processHttpClientAndroidLib(context.getClassLoader());
                 Main.this.processXutils(context.getClassLoader());
             }
         }});
+        Main.this.processOkHttp(loadPackageParam.classLoader);
+        Log.i(TAG,"androidx.multidex.MultiDexApplication---> try attach");
+        try{
+            XposedHelpers.findAndHookMethod("androidx.multidex.MultiDexApplication", loadPackageParam.classLoader, "attach", new Object[]{Context.class, new XC_MethodHook() {
+                /* class just.trust.me.Main.11 */
+
+                /* access modifiers changed from: protected */
+                public void afterHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+                    Log.i(TAG,"androidx.multidex.MultiDexApplication--->attached");
+                    Context context = (Context) methodHookParam.args[0];
+                    Main.this.processOkHttp(context.getClassLoader());
+                    Main.this.processHttpClientAndroidLib(context.getClassLoader());
+                    Main.this.processXutils(context.getClassLoader());
+                }
+            }});
+        }catch (Throwable throwable){
+            throwable.printStackTrace();
+        }
+
         if (hasTrustManagerImpl()) {
             Log.d(TAG, "Hooking com.android.org.conscrypt.TrustManagerImpl for: " + this.currentPackageName);
             XposedHelpers.findAndHookMethod("com.android.org.conscrypt.TrustManagerImpl", loadPackageParam.classLoader, "checkServerTrusted", new Object[]{X509Certificate[].class, String.class, new XC_MethodReplacement() {
@@ -293,6 +314,22 @@ public class Main implements IXposedHookLoadPackage {
             }});
         } catch (ClassNotFoundException unused4) {
             Log.d(TAG, "OKHTTP 3.x not found in " + this.currentPackageName + " -- not hooking OkHostnameVerifier.verify(String, X509)(");
+        }
+        try {
+            //Log.d(TAG, "OKHTTP 3.x not found in " + this.currentPackageName + " -- not hooking OkHostnameVerifier.verify(String, X509)(");
+            classLoader.loadClass("okhttp3.OkHttpClient.Builder");
+            XposedHelpers.findAndHookMethod("okhttp3.OkHttpClient.Builder", classLoader, "hostnameVerifier",
+                    new Object[]{HostnameVerifier.class, new XC_MethodHook() {
+                /* class just.trust.me.Main.19 */
+
+                /* access modifiers changed from: protected */
+                public void beforeHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+                    methodHookParam.args[0] = new ImSureItsLegitHostnameVerifier();
+                }
+            }});
+            Log.d(TAG, "OKHTTP 3.x hook success " + this.currentPackageName + " -->  okhttp3.OkHttpClient.Builder.hostnameVerifier()");
+        } catch (ClassNotFoundException unused4) {
+            Log.d(TAG, "OKHTTP 3.x not found in " + this.currentPackageName + " -- not hooking okhttp3.OkHttpClient.Builder.hostnameVerifier()");
         }
     }
 

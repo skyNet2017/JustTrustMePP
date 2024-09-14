@@ -39,7 +39,7 @@ public class Hook extends just.trust.me.Main{
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                     if(CertificatePinner==null){
                         Throwable throwable=new Throwable();
-                        throwable.printStackTrace();
+                        //throwable.printStackTrace();
                         StackTraceElement[] stackTraceElements=throwable.getStackTrace();
 
                         //遍历调用堆栈信息
